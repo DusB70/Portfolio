@@ -6,19 +6,16 @@
  * - Keyboard navigation between sections
  * - Liquid/fluid entrance/exit transitions
  * - SVG filter-based morphing effects
+ * - Lazy loading for sections below the fold (mobile optimization)
  */
 
 "use client";
 
 import { useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Hero from "@/components/sections/Hero";
-import About from "@/components/sections/About";
-import Skills from "@/components/sections/Skills";
-import Education from "@/components/sections/Education";
-import ProjectsSimple from "@/components/sections/ProjectsSimple";
-import Contact from "@/components/sections/Contact";
 import Preloader from "@/components/Preloader";
 import CursorGlow from "@/components/CursorGlow";
 import {
@@ -26,6 +23,32 @@ import {
   LiquidSection,
   LiquidDivider,
 } from "@/components/LiquidTransition";
+
+// Lazy load sections below the fold for better mobile performance
+const About = dynamic(() => import("@/components/sections/About"), {
+  loading: () => <SectionSkeleton />,
+});
+const Skills = dynamic(() => import("@/components/sections/Skills"), {
+  loading: () => <SectionSkeleton />,
+});
+const Education = dynamic(() => import("@/components/sections/Education"), {
+  loading: () => <SectionSkeleton />,
+});
+const ProjectsSimple = dynamic(() => import("@/components/sections/ProjectsSimple"), {
+  loading: () => <SectionSkeleton />,
+});
+const Contact = dynamic(() => import("@/components/sections/Contact"), {
+  loading: () => <SectionSkeleton />,
+});
+
+// Minimal skeleton for lazy-loaded sections
+function SectionSkeleton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+    </div>
+  );
+}
 
 const sections = [
   { id: "hero", Component: Hero },

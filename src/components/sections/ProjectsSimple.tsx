@@ -113,7 +113,7 @@ function MobileProjectCards({ projects }: { projects: Project[] }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-30px" }}
             transition={{ duration: 0.5, delay: index * 0.08 }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-sm"
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 md:backdrop-blur-sm"
             role="article"
             aria-label={`Project: ${project.title}`}
           >
@@ -129,15 +129,17 @@ function MobileProjectCards({ projects }: { projects: Project[] }) {
                   src={project.image}
                   alt={project.title}
                   fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className={`object-cover transition-all duration-500 ${
                     isExpanded ? "scale-105 brightness-50" : ""
                   }`}
+                  loading="lazy"
                 />
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
                 {/* Project number badge */}
-                <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-white/10 backdrop-blur-sm border border-white/20">
+                <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-white/10 md:backdrop-blur-sm border border-white/20">
                   <span className="text-[10px] font-mono text-white/80 uppercase tracking-wider">
                     {String(index + 1).padStart(2, "0")}
                   </span>
@@ -145,7 +147,7 @@ function MobileProjectCards({ projects }: { projects: Project[] }) {
 
                 {/* Expand indicator */}
                 <motion.div
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 md:backdrop-blur-sm border border-white/20 flex items-center justify-center"
                   animate={{ rotate: isExpanded ? 180 : 0 }}
                   transition={{ duration: 0.3 }}
                 >
@@ -423,9 +425,11 @@ export default function ProjectsCarousel() {
                         src={project.image}
                         alt={project.title}
                         fill
+                        sizes="(max-width: 768px) 100vw, 400px"
                         className={`object-cover transition-all duration-500 ${
                           isHovered ? "scale-110 brightness-[0.3]" : ""
                         }`}
+                        loading="lazy"
                       />
 
                       {/* Default dark overlay */}

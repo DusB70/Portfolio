@@ -18,6 +18,7 @@ import {
   AnimatePresence,
 } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
+import { useDeviceOptimization } from "@/hooks/useDeviceOptimization";
 
 const navLinks = [
   { name: "Home", href: "#hero" },
@@ -78,6 +79,7 @@ export default function Header() {
   const [activeSection, setActiveSection] = useState("hero");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isMobile } = useDeviceOptimization();
 
   useEffect(() => {
     const sectionIds = [
@@ -149,7 +151,7 @@ export default function Header() {
         {/* White glow effect around navbar */}
         <div className="absolute inset-0 bg-white/10 blur-2xl rounded-full" />
 
-        <nav className="relative px-3 md:px-4 py-2.5 md:py-3 bg-black backdrop-blur-xl rounded-full border border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.15),0_0_80px_rgba(255,255,255,0.08)] flex items-center justify-between">
+        <nav className={`relative px-3 md:px-4 py-2.5 md:py-3 bg-black rounded-full border border-white/10 flex items-center justify-between ${isMobile ? "shadow-lg" : "backdrop-blur-xl shadow-[0_0_40px_rgba(255,255,255,0.15),0_0_80px_rgba(255,255,255,0.08)]"}`}>
           {/* Logo Section */}
           <motion.div
             className="flex items-center gap-2 md:gap-3 pl-1 md:pl-2"
@@ -267,7 +269,7 @@ export default function Header() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md z-40 md:hidden"
+              className="fixed inset-0 bg-black/80 z-40 md:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
@@ -279,7 +281,7 @@ export default function Header() {
               exit="closed"
               className="fixed top-20 left-4 right-4 z-50 md:hidden"
             >
-              <div className="bg-black/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-[0_0_60px_rgba(255,255,255,0.1)]">
+              <div className="bg-black/98 border border-white/10 rounded-2xl p-6 shadow-lg">
                 {/* Mobile Nav Links */}
                 <nav className="space-y-2">
                   {navLinks.map((link, index) => (

@@ -4,30 +4,14 @@
  * Skills Section - Grid layout with hover interactions and tech icons
  *
  * Animation Logic:
- * - Scroll-triggered grid reveal with staggered items
- * - Hover: gentle scale (1.02) + subtle glow effect
- * - Uses framer-motion's whileHover for buttery interactions
- * - Grid layout on desktop, stacked on mobile
+ * - Desktop: Scroll-triggered parallax and staggered reveals
+ * - Mobile: Simple fade-in for 60fps performance
  */
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
-
-// Hook to safely use scroll with refs (prevents hydration mismatch)
-function useSafeScroll(ref: React.RefObject<HTMLDivElement | null>, offset: [string, string] = ["start end", "end start"]) {
-  const [isMounted, setIsMounted] = useState(false);
-  
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  
-  const { scrollYProgress } = useScroll({
-    target: isMounted ? ref : undefined,
-    offset,
-  });
-  
-  return { scrollYProgress };
-}
+import { motion, useTransform } from "framer-motion";
+import { useRef } from "react";
+import { useDeviceOptimization } from "@/hooks/useDeviceOptimization";
+import { useSafeScroll } from "@/hooks/useScrollUtils";
 
 // Skill icons as SVG components
 const skillIcons: { [key: string]: React.ReactNode } = {
@@ -256,7 +240,7 @@ function SkillCard({
         scale: 1.02,
         transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const },
       }}
-      className="group relative p-4 md:p-6 lg:p-8 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-sm transition-colors duration-500 hover:border-white/20 hover:bg-white/[0.04] overflow-hidden"
+      className="group relative p-4 md:p-6 lg:p-8 rounded-2xl border border-white/10 bg-white/[0.02] md:backdrop-blur-sm transition-colors duration-500 hover:border-white/20 hover:bg-white/[0.04] overflow-hidden"
     >
       {/* Gradient background on hover */}
       <div
@@ -288,20 +272,31 @@ function SkillCard({
 
 export default function Skills() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useSafeScroll(sectionRef, ["start end", "end start"]);
+  const { isMobile } = useDeviceOptimization();
 
-  // Parallax effects
-  const bgY = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
+  // Disable scroll tracking on mobile
+  const { scrollYProgress } = useSafeScroll(
+    sectionRef,
+    ["start end", "end start"],
+    !isMobile
+  );
+
+  // Parallax effects - disabled on mobile
+  const bgY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "0%"] : ["-10%", "10%"]);
 
   return (
     <div
       ref={sectionRef}
       className="relative min-h-screen flex items-center py-16 md:py-20 lg:py-24 overflow-hidden"
     >
-      {/* Background accent with parallax */}
+      {/* Background accent with parallax - simplified on mobile */}
       <motion.div
-        style={{ y: bgY }}
-        className="absolute top-1/2 left-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-gradient-radial from-white/[0.02] to-transparent rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2 pointer-events-none"
+        style={isMobile ? {} : { y: bgY }}
+        className={`absolute top-1/2 left-0 rounded-full -translate-y-1/2 -translate-x-1/2 pointer-events-none ${
+          isMobile
+            ? "w-[200px] h-[200px] bg-gradient-radial from-white/[0.01] to-transparent"
+            : "w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-gradient-radial from-white/[0.02] to-transparent blur-3xl"
+        }`}
       />
 
       <div className="container relative z-10 w-full">

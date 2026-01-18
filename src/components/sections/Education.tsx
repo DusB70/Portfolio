@@ -4,29 +4,14 @@
  * Education Section - Timeline-style education display
  *
  * Animation Logic:
- * - Scroll-triggered reveal with staggered items
- * - Parallax background effect
- * - Gradient accents with hover interactions
+ * - Desktop: Scroll-triggered parallax and staggered reveals
+ * - Mobile: Simple fade-in for 60fps performance
  */
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
-
-// Hook to safely use scroll with refs (prevents hydration mismatch)
-function useSafeScroll(ref: React.RefObject<HTMLDivElement | null>, offset: [string, string] = ["start end", "end start"]) {
-  const [isMounted, setIsMounted] = useState(false);
-  
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  
-  const { scrollYProgress } = useScroll({
-    target: isMounted ? ref : undefined,
-    offset,
-  });
-  
-  return { scrollYProgress };
-}
+import { motion, useTransform } from "framer-motion";
+import { useRef } from "react";
+import { useDeviceOptimization } from "@/hooks/useDeviceOptimization";
+import { useSafeScroll } from "@/hooks/useScrollUtils";
 
 // Animation variants
 const containerVariants = {
@@ -90,10 +75,17 @@ const education = [
 
 export default function Education() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useSafeScroll(sectionRef, ["start end", "end start"]);
+  const { isMobile } = useDeviceOptimization();
 
-  // Parallax effects
-  const bgY = useTransform(scrollYProgress, [0, 1], ["15%", "-15%"]);
+  // Disable scroll tracking on mobile
+  const { scrollYProgress } = useSafeScroll(
+    sectionRef,
+    ["start end", "end start"],
+    !isMobile
+  );
+
+  // Parallax effects - disabled on mobile
+  const bgY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "0%"] : ["15%", "-15%"]);
   const lineHeight = useTransform(scrollYProgress, [0, 0.5], ["0%", "100%"]);
 
   return (
@@ -101,14 +93,22 @@ export default function Education() {
       ref={sectionRef}
       className="relative min-h-screen flex items-center py-16 md:py-20 lg:py-24 overflow-hidden"
     >
-      {/* Parallax background accent */}
+      {/* Parallax background accent - simplified on mobile */}
       <motion.div
-        style={{ y: bgY }}
-        className="absolute top-1/4 right-0 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-gradient-radial from-purple-500/[0.03] to-transparent rounded-full blur-3xl translate-x-1/3 pointer-events-none"
+        style={isMobile ? {} : { y: bgY }}
+        className={`absolute top-1/4 right-0 rounded-full translate-x-1/3 pointer-events-none ${
+          isMobile
+            ? "w-[150px] h-[150px] bg-gradient-radial from-purple-500/[0.02] to-transparent"
+            : "w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-gradient-radial from-purple-500/[0.03] to-transparent blur-3xl"
+        }`}
       />
       <motion.div
-        style={{ y: bgY }}
-        className="absolute bottom-1/4 left-0 w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-gradient-radial from-blue-500/[0.02] to-transparent rounded-full blur-3xl -translate-x-1/2 pointer-events-none"
+        style={isMobile ? {} : { y: bgY }}
+        className={`absolute bottom-1/4 left-0 rounded-full -translate-x-1/2 pointer-events-none ${
+          isMobile
+            ? "w-[100px] h-[100px] bg-gradient-radial from-blue-500/[0.01] to-transparent"
+            : "w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-gradient-radial from-blue-500/[0.02] to-transparent blur-3xl"
+        }`}
       />
 
       <div className="container relative z-10 w-full">
@@ -167,8 +167,8 @@ export default function Education() {
                 <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
               </div>
 
-              {/* Education Card */}
-              <div className="group relative p-6 md:p-8 lg:p-10 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-sm transition-all duration-500 hover:border-white/20 hover:bg-white/[0.04] overflow-hidden">
+              {/* Education Card - no backdrop-blur on mobile */}
+              <div className="group relative p-6 md:p-8 lg:p-10 rounded-2xl border border-white/10 bg-white/[0.02] md:backdrop-blur-sm transition-all duration-500 hover:border-white/20 hover:bg-white/[0.04] overflow-hidden">
                 {/* Gradient background on hover */}
                 <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-transparent pointer-events-none" />
 

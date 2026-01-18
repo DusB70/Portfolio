@@ -3,51 +3,19 @@
  *
  * Creates a fluid, morphing blob effect between sections
  * Uses SVG filters for the liquid/gooey effect
- * DISABLED on mobile for performance
+ * DISABLED on mobile for performance - uses simple fade-in instead
  */
 
 "use client";
 
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
-
-// Hook to detect mobile/touch devices
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(true); // Default true to prevent heavy effects on first render
-  
-  useEffect(() => {
-    const checkMobile = () => {
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const isSmallScreen = window.innerWidth < 768;
-      setIsMobile(isTouchDevice || isSmallScreen);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
-  return isMobile;
-}
-
-// Hook to safely use scroll with refs (prevents hydration mismatch)
-function useSafeScroll(ref: React.RefObject<HTMLDivElement | null>, offset: [string, string] = ["start end", "end start"]) {
-  const [isMounted, setIsMounted] = useState(false);
-  
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  
-  const { scrollYProgress } = useScroll({
-    target: isMounted ? ref : undefined,
-    offset,
-  });
-  
-  return { scrollYProgress, isMounted };
-}
+import { useDeviceOptimization } from "@/hooks/useDeviceOptimization";
+import { useSafeScroll } from "@/hooks/useScrollUtils";
 
 // SVG Filter for the liquid/gooey effect - ONLY rendered on desktop
 export function LiquidFilter() {
-  const isMobile = useIsMobile();
+  const { isMobile } = useDeviceOptimization();
   
   // Skip heavy SVG filters on mobile
   if (isMobile) return null;
@@ -174,9 +142,11 @@ interface LiquidDividerProps {
 }
 
 export function LiquidDivider({ className = "" }: LiquidDividerProps) {
-  const isMobile = useIsMobile();
+  const { isMobile, animationLevel } = useDeviceOptimization();
   const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress, isMounted } = useSafeScroll(ref, ["start end", "end start"]);
+  
+  // Completely disable scroll tracking on mobile
+  const { scrollYProgress } = useSafeScroll(ref, ["start end", "end start"], !isMobile);
 
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -187,10 +157,10 @@ export function LiquidDivider({ className = "" }: LiquidDividerProps) {
   const waveOffset = useTransform(smoothProgress, [0, 1], [0, 100]);
   const opacity = useTransform(smoothProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
 
-  // Simple divider on mobile
-  if (isMobile) {
+  // Simple static divider on mobile - no animations
+  if (isMobile || animationLevel === "minimal") {
     return (
-      <div className={`relative h-16 w-full ${className}`}>
+      <div className={`relative h-8 md:h-16 w-full ${className}`}>
         <div className="absolute inset-x-0 top-1/2 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       </div>
     );
@@ -287,37 +257,60 @@ interface LiquidSectionProps {
 }
 
 export function LiquidSection({ children, id, index }: LiquidSectionProps) {
-  const isMobile = useIsMobile();
+  const { isMobile, animationLevel } = useDeviceOptimization();
   const sectionRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
 
-  const { scrollYProgress } = useSafeScroll(sectionRef, ["start end", "end start"]);
+  // Completely disable scroll tracking on mobile
+  const { scrollYProgress } = useSafeScroll(
+    sectionRef,
+    ["start end", "end start"],
+    !isMobile && animationLevel === "full"
+  );
 
-  // Use lighter spring on mobile
+  // Use lighter spring on mobile (though scroll tracking is disabled)
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: isMobile ? 200 : 80,
-    damping: isMobile ? 40 : 25,
+    stiffness: 200,
+    damping: 40,
   });
 
-  // Transform values based on scroll - reduced on mobile
+  // Transform values - completely disabled on mobile
   const y = useTransform(
-    smoothProgress, 
-    [0, 0.3, 0.7, 1], 
-    isMobile ? [30, 0, 0, -30] : [100, 0, 0, -100]
+    smoothProgress,
+    [0, 0.3, 0.7, 1],
+    isMobile ? [0, 0, 0, 0] : [100, 0, 0, -100]
   );
-  const opacity = useTransform(smoothProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+  const opacity = useTransform(
+    smoothProgress,
+    [0, 0.2, 0.8, 1],
+    isMobile ? [1, 1, 1, 1] : [0, 1, 1, 0]
+  );
   const scale = useTransform(
     smoothProgress,
     [0, 0.3, 0.7, 1],
-    isMobile ? [1, 1, 1, 1] : [0.95, 1, 1, 0.95] // No scale on mobile
+    [1, 1, 1, 1] // No scale animation on any device for performance
   );
 
   useEffect(() => {
+    if (isMobile) return; // Skip scroll listener on mobile
     const unsubscribe = scrollYProgress.on("change", (latest) => {
       setIsInView(latest > 0.1 && latest < 0.9);
     });
     return unsubscribe;
-  }, [scrollYProgress]);
+  }, [scrollYProgress, isMobile]);
+
+  // Simple wrapper on mobile - just render children with no transforms
+  if (isMobile || animationLevel !== "full") {
+    return (
+      <section
+        ref={sectionRef}
+        id={id}
+        className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      >
+        {children}
+      </section>
+    );
+  }
 
   return (
     <motion.section
@@ -326,11 +319,11 @@ export function LiquidSection({ children, id, index }: LiquidSectionProps) {
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
       style={{
         opacity,
-        scale: isMobile ? 1 : scale, // Skip scale transform on mobile
+        y,
       }}
     >
       {/* Liquid edge effect at top - ONLY on desktop */}
-      {!isMobile && index > 0 && (
+      {index > 0 && (
         <motion.div
           className="absolute top-0 left-0 right-0 h-24 pointer-events-none z-10"
           style={{

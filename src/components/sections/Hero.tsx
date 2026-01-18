@@ -4,30 +4,15 @@
  * Hero Section - Full viewport with animated text reveals
  *
  * Animation Logic:
- * - Letter-by-letter reveal for name using staggered children
- * - Line-by-line reveal for tagline with delay
- * - Subtle scale and fade entrance for supporting elements
- * - Uses spring physics for natural motion
+ * - Desktop: Letter-by-letter reveal with spring physics
+ * - Mobile: Simple fade-in for guaranteed 60fps
+ * - Low Power Mode: Minimal animations
  */
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-
-// Hook to safely use scroll with refs (prevents hydration mismatch)
-function useSafeScroll(ref: React.RefObject<HTMLDivElement | null>, offset: [string, string] = ["start end", "end start"]) {
-  const [isMounted, setIsMounted] = useState(false);
-  
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  
-  const { scrollYProgress } = useScroll({
-    target: isMounted ? ref : undefined,
-    offset,
-  });
-  
-  return { scrollYProgress };
-}
+import { useDeviceOptimization } from "@/hooks/useDeviceOptimization";
+import { useSafeScroll } from "@/hooks/useScrollUtils";
 
 // Container variants for orchestrating child animations
 const containerVariants = {
@@ -41,7 +26,19 @@ const containerVariants = {
   },
 };
 
-// Individual letter animation
+// Mobile-optimized container (word-level, not character-level)
+const mobileContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 1.8,
+    },
+  },
+};
+
+// Individual letter animation (desktop)
 const letterVariants = {
   hidden: {
     opacity: 0,
@@ -57,6 +54,31 @@ const letterVariants = {
       damping: 20,
       stiffness: 100,
     },
+  },
+};
+
+// Simple word animation (mobile - much lighter)
+const wordVariants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
+    },
+  },
+};
+
+// Minimal animation (low power mode)
+const minimalVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.3 },
   },
 };
 
@@ -88,16 +110,55 @@ const scrollIndicatorVariants = {
   },
 };
 
-// Animated split text component - now handles each word separately
+// Animated split text component - optimized for device capability
 function AnimatedText({
   text,
   className,
+  animationLevel,
 }: {
   text: string;
   className?: string;
+  animationLevel: "full" | "reduced" | "minimal";
 }) {
   const words = text.split(" ");
 
+  // Minimal: Simple fade in, no splitting
+  if (animationLevel === "minimal") {
+    return (
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 1.8 }}
+        className={className}
+      >
+        {text}
+      </motion.span>
+    );
+  }
+
+  // Reduced (mobile): Word-level animation, no 3D transforms
+  if (animationLevel === "reduced") {
+    return (
+      <motion.span
+        variants={mobileContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className={`inline-flex flex-wrap justify-center gap-x-3 md:gap-x-4 ${className}`}
+      >
+        {words.map((word, wordIndex) => (
+          <motion.span
+            key={wordIndex}
+            variants={wordVariants}
+            className="inline-block"
+          >
+            {word}
+          </motion.span>
+        ))}
+      </motion.span>
+    );
+  }
+
+  // Full (desktop): Character-level animation with 3D transforms
   return (
     <motion.span
       variants={containerVariants}
@@ -137,11 +198,18 @@ export default function Hero() {
   const [time, setTime] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useSafeScroll(sectionRef, ["start start", "end start"]);
+  const { isMobile, animationLevel } = useDeviceOptimization();
 
-  // Parallax effect for hero content
-  const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  // Disable scroll-linked animations on mobile for better performance
+  const { scrollYProgress } = useSafeScroll(
+    sectionRef,
+    ["start start", "end start"],
+    !isMobile // Only enable on desktop
+  );
+
+  // Parallax effect - only on desktop
+  const y = useTransform(scrollYProgress, [0, 1], [0, isMobile ? 0 : 200]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, isMobile ? 1 : 0]);
 
   useEffect(() => {
     const updateTimeAndStatus = () => {
@@ -171,14 +239,18 @@ export default function Hero() {
       ref={sectionRef}
       className="relative min-h-[90vh] flex flex-col items-center justify-center overflow-hidden px-6 py-[var(--section-padding)]"
     >
-      {/* Background gradient accent */}
+      {/* Background gradient accent - reduced on mobile */}
       <motion.div
         className="absolute inset-0 pointer-events-none"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 2, delay: 0.5 }}
       >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-white/[0.03] to-transparent rounded-full blur-3xl" />
+        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ${
+          isMobile 
+            ? "w-[400px] h-[400px] bg-gradient-radial from-white/[0.02] to-transparent" 
+            : "w-[800px] h-[800px] bg-gradient-radial from-white/[0.03] to-transparent blur-3xl"
+        }`} />
       </motion.div>
 
       {/* Main content with parallax */}
@@ -191,6 +263,7 @@ export default function Hero() {
           <AnimatedText
             text="Tharusha Pathirana"
             className="text-[clamp(3.5rem,11vw,8rem)] leading-[0.85]"
+            animationLevel={animationLevel}
           />
         </h1>
 
