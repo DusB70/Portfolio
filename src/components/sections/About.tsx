@@ -151,13 +151,13 @@ export default function About() {
 
                 {/* Image container with glassmorphism */}
                 <div className="relative w-full h-full rounded-xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/10">
-                  {/* Placeholder - Replace src with your image path */}
                   <Image
-                    src="/profile.jpg"
+                    src="/Profile.jpg"
                     alt="Tharusha Pathirana"
                     fill
                     className="object-cover"
                     priority
+                    unoptimized
                   />
 
                   {/* Overlay gradient */}

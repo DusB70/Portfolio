@@ -19,9 +19,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "John Doe | Creative Developer & Designer",
+  title: "Tharusha | Creative Developer & Designer",
   description:
-    "Portfolio of John Doe - A creative developer specializing in building exceptional digital experiences with modern web technologies.",
+    "Portfolio of Tharusha - A creative developer specializing in building practical digital solutions.",
   keywords: [
     "developer",
     "designer",
@@ -30,11 +30,11 @@ export const metadata: Metadata = {
     "next.js",
     "creative",
   ],
-  authors: [{ name: "John Doe" }],
+  authors: [{ name: "Tharusha" }],
   openGraph: {
-    title: "John Doe | Creative Developer & Designer",
+    title: "Tharusha | Creative Developer & Designer",
     description:
-      "Portfolio of John Doe - A creative developer specializing in building exceptional digital experiences.",
+      "Portfolio of Tharusha - A creative developer specializing in building practical digital solutions.",
     type: "website",
   },
 };
