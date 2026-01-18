@@ -47,7 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="lenis">
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} antialiased bg-black text-white cursor-none md:cursor-none`}
+        className={`${inter.variable} ${spaceGrotesk.variable} antialiased bg-black text-white`}
         style={{
           fontFamily: "var(--font-inter), 'Inter', sans-serif",
         }}

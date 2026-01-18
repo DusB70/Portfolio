@@ -5,6 +5,7 @@
  *
  * Creates a large, slow-moving glow that follows the cursor
  * to add "internal" lighting depth to the dark background.
+ * DISABLED on mobile/touch devices for performance.
  */
 
 import { motion, useMotionValue, useSpring } from "framer-motion";
@@ -12,6 +13,7 @@ import { useEffect, useState } from "react";
 
 export default function CursorGlow() {
   const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(true); // Default to true to prevent flash
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
 
@@ -21,6 +23,18 @@ export default function CursorGlow() {
   const smoothY = useSpring(cursorY, springConfig);
 
   useEffect(() => {
+    // Check for mobile/touch devices
+    const checkMobile = () => {
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth < 768;
+      setIsMobile(isTouchDevice || isSmallScreen);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    // Skip cursor tracking on mobile
+    if (isMobile) return;
+
     const moveCursor = (e: MouseEvent) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
@@ -34,11 +48,15 @@ export default function CursorGlow() {
     document.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
+      window.removeEventListener('resize', checkMobile);
       window.removeEventListener("mousemove", moveCursor);
       document.removeEventListener("mouseenter", handleMouseEnter);
       document.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [cursorX, cursorY]);
+  }, [cursorX, cursorY, isMobile]);
+
+  // Don't render on mobile/touch devices
+  if (isMobile) return null;
 
   return (
     <motion.div

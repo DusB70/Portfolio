@@ -11,7 +11,23 @@
  */
 
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+
+// Hook to safely use scroll with refs (prevents hydration mismatch)
+function useSafeScroll(ref: React.RefObject<HTMLDivElement | null>, offset: [string, string] = ["start end", "end start"]) {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  const { scrollYProgress } = useScroll({
+    target: isMounted ? ref : undefined,
+    offset,
+  });
+  
+  return { scrollYProgress };
+}
 
 // Skill icons as SVG components
 const skillIcons: { [key: string]: React.ReactNode } = {
@@ -272,10 +288,7 @@ function SkillCard({
 
 export default function Skills() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
+  const { scrollYProgress } = useSafeScroll(sectionRef, ["start end", "end start"]);
 
   // Parallax effects
   const bgY = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);

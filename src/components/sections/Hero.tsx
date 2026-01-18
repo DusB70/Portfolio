@@ -13,6 +13,22 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
+// Hook to safely use scroll with refs (prevents hydration mismatch)
+function useSafeScroll(ref: React.RefObject<HTMLDivElement | null>, offset: [string, string] = ["start end", "end start"]) {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  const { scrollYProgress } = useScroll({
+    target: isMounted ? ref : undefined,
+    offset,
+  });
+  
+  return { scrollYProgress };
+}
+
 // Container variants for orchestrating child animations
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -121,10 +137,7 @@ export default function Hero() {
   const [time, setTime] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end start"],
-  });
+  const { scrollYProgress } = useSafeScroll(sectionRef, ["start start", "end start"]);
 
   // Parallax effect for hero content
   const y = useTransform(scrollYProgress, [0, 1], [0, 200]);

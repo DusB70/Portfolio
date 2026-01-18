@@ -3,6 +3,7 @@
  *
  * Creates a fluid, morphing blob effect between sections
  * Uses SVG filters for the liquid/gooey effect
+ * DISABLED on mobile for performance
  */
 
 "use client";
@@ -10,8 +11,47 @@
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 
-// SVG Filter for the liquid/gooey effect
+// Hook to detect mobile/touch devices
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(true); // Default true to prevent heavy effects on first render
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth < 768;
+      setIsMobile(isTouchDevice || isSmallScreen);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  return isMobile;
+}
+
+// Hook to safely use scroll with refs (prevents hydration mismatch)
+function useSafeScroll(ref: React.RefObject<HTMLDivElement | null>, offset: [string, string] = ["start end", "end start"]) {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  const { scrollYProgress } = useScroll({
+    target: isMounted ? ref : undefined,
+    offset,
+  });
+  
+  return { scrollYProgress, isMounted };
+}
+
+// SVG Filter for the liquid/gooey effect - ONLY rendered on desktop
 export function LiquidFilter() {
+  const isMobile = useIsMobile();
+  
+  // Skip heavy SVG filters on mobile
+  if (isMobile) return null;
+  
   return (
     <svg className="absolute w-0 h-0" aria-hidden="true">
       <defs>
@@ -128,17 +168,15 @@ export function LiquidBlob({ progress, direction }: LiquidBlobProps) {
   );
 }
 
-// Section divider with liquid effect
+// Section divider with liquid effect - simplified on mobile
 interface LiquidDividerProps {
   className?: string;
 }
 
 export function LiquidDivider({ className = "" }: LiquidDividerProps) {
+  const isMobile = useIsMobile();
   const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
+  const { scrollYProgress, isMounted } = useSafeScroll(ref, ["start end", "end start"]);
 
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -148,6 +186,15 @@ export function LiquidDivider({ className = "" }: LiquidDividerProps) {
 
   const waveOffset = useTransform(smoothProgress, [0, 1], [0, 100]);
   const opacity = useTransform(smoothProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
+
+  // Simple divider on mobile
+  if (isMobile) {
+    return (
+      <div className={`relative h-16 w-full ${className}`}>
+        <div className="absolute inset-x-0 top-1/2 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -232,7 +279,7 @@ export function LiquidOverlay({ isActive, onComplete }: LiquidOverlayProps) {
   );
 }
 
-// Section wrapper with liquid entrance animation
+// Section wrapper with liquid entrance animation - simplified on mobile
 interface LiquidSectionProps {
   children: React.ReactNode;
   id: string;
@@ -240,33 +287,29 @@ interface LiquidSectionProps {
 }
 
 export function LiquidSection({ children, id, index }: LiquidSectionProps) {
+  const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
+  const { scrollYProgress } = useSafeScroll(sectionRef, ["start end", "end start"]);
 
+  // Use lighter spring on mobile
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 80,
-    damping: 25,
+    stiffness: isMobile ? 200 : 80,
+    damping: isMobile ? 40 : 25,
   });
 
-  // Transform values based on scroll
-  const y = useTransform(smoothProgress, [0, 0.3, 0.7, 1], [100, 0, 0, -100]);
+  // Transform values based on scroll - reduced on mobile
+  const y = useTransform(
+    smoothProgress, 
+    [0, 0.3, 0.7, 1], 
+    isMobile ? [30, 0, 0, -30] : [100, 0, 0, -100]
+  );
   const opacity = useTransform(smoothProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
   const scale = useTransform(
     smoothProgress,
     [0, 0.3, 0.7, 1],
-    [0.95, 1, 1, 0.95]
-  );
-
-  // Liquid distortion amount
-  const distortion = useTransform(
-    smoothProgress,
-    [0, 0.2, 0.8, 1],
-    [20, 0, 0, 20]
+    isMobile ? [1, 1, 1, 1] : [0.95, 1, 1, 0.95] // No scale on mobile
   );
 
   useEffect(() => {
@@ -283,11 +326,11 @@ export function LiquidSection({ children, id, index }: LiquidSectionProps) {
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
       style={{
         opacity,
-        scale,
+        scale: isMobile ? 1 : scale, // Skip scale transform on mobile
       }}
     >
-      {/* Liquid edge effect at top */}
-      {index > 0 && (
+      {/* Liquid edge effect at top - ONLY on desktop */}
+      {!isMobile && index > 0 && (
         <motion.div
           className="absolute top-0 left-0 right-0 h-24 pointer-events-none z-10"
           style={{
@@ -299,26 +342,28 @@ export function LiquidSection({ children, id, index }: LiquidSectionProps) {
       )}
 
       {/* Main content with liquid animation */}
-      <motion.div className="w-full relative z-10 pt-16" style={{ y }}>
+      <motion.div className="w-full relative z-10 pt-16" style={{ y: isMobile ? 0 : y }}>
         {children}
       </motion.div>
 
-      {/* Liquid edge effect at bottom */}
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none z-10"
-        style={{
-          background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
-          filter: isInView ? "url(#liquid-distort)" : "none",
-        }}
-      />
+      {/* Liquid edge effect at bottom - ONLY on desktop */}
+      {!isMobile && (
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none z-10"
+          style={{
+            background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
+            filter: isInView ? "url(#liquid-distort)" : "none",
+          }}
+        />
+      )}
 
-      {/* Floating liquid particles */}
-      <LiquidParticles isActive={isInView} />
+      {/* Floating liquid particles - ONLY on desktop */}
+      {!isMobile && <LiquidParticles isActive={isInView} />}
     </motion.section>
   );
 }
 
-// Floating liquid particles for ambient effect
+// Floating liquid particles for ambient effect - ONLY on desktop
 function LiquidParticles({ isActive }: { isActive: boolean }) {
   const particles = Array.from({ length: 5 }, (_, i) => ({
     id: i,

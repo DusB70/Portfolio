@@ -26,11 +26,16 @@ export default function CustomCursor() {
   const cursorX = useSpring(mouseX, springConfig);
   const cursorY = useSpring(mouseY, springConfig);
 
+  const [isMobile, setIsMobile] = useState(true); // Default true to prevent flash
+
   useEffect(() => {
-    // Hide cursor on touch devices
-    if ("ontouchstart" in window) {
-      return;
-    }
+    // Check for mobile/touch devices early
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isSmallScreen = window.innerWidth < 768;
+    setIsMobile(isTouchDevice || isSmallScreen);
+
+    // Skip all setup on mobile
+    if (isTouchDevice || isSmallScreen) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
@@ -75,8 +80,8 @@ export default function CustomCursor() {
     };
   }, [mouseX, mouseY, isVisible]);
 
-  // Don't render on touch devices or when not visible
-  if (typeof window !== "undefined" && "ontouchstart" in window) {
+  // Don't render on touch/mobile devices
+  if (isMobile) {
     return null;
   }
 
