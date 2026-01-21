@@ -31,7 +31,7 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// Snapshot Carousel Component
+// Snapshot Carousel Component - Only rendered when modal is open
 function SnapshotCarousel({
   snapshots,
   title,
@@ -74,6 +74,7 @@ function SnapshotCarousel({
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 800px"
+            priority={currentIndex === 0}
           />
         </motion.div>
       </AnimatePresence>
@@ -212,7 +213,7 @@ function ProjectModal({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="text-xl md:text-2xl lg:text-3xl font-heading font-bold text-white mb-4"
+                  className="text-xl md:text-2xl lg:text-10xl font-heading font-bold text-white mb-4"
                 >
                   {project.title}
                 </motion.h2>
@@ -393,6 +394,7 @@ export default function ProjectsCarousel() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
   const totalProjects = projects.length;
   const isMobile = useIsMobile();
 
@@ -448,11 +450,20 @@ export default function ProjectsCarousel() {
   const openModal = (project: Project) => {
     setSelectedProject(project);
     setIsModalOpen(true);
+    // Dispatch event to hide navbar
+    window.dispatchEvent(
+      new CustomEvent("projectModalStateChange", { detail: { isOpen: true } }),
+    );
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setTimeout(() => setSelectedProject(null), 300);
+    // Dispatch event to show navbar
+    window.dispatchEvent(
+      new CustomEvent("projectModalStateChange", { detail: { isOpen: false } }),
+    );
+    // Clear selected project after animation completes to free up resources
+    setTimeout(() => setSelectedProject(null), 400);
   };
 
   const handleCardClick = (index: number) => {
@@ -571,6 +582,8 @@ export default function ProjectsCarousel() {
                       damping: 30,
                     }}
                     onClick={() => handleCardClick(index)}
+                    onMouseEnter={() => setHoveredCardIndex(index)}
+                    onMouseLeave={() => setHoveredCardIndex(null)}
                     whileHover={isActive ? { scale: 1.02 } : {}}
                     role="group"
                     aria-roledescription="slide"
@@ -599,18 +612,22 @@ export default function ProjectsCarousel() {
                           </span>
                         </div>
 
-                        {/* Click indicator for active card */}
-                        {isActive && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="absolute top-3 right-3 px-2 py-1 rounded-md bg-white/10 backdrop-blur-sm border border-white/20"
-                          >
-                            <span className="text-[10px] font-mono text-white/80 uppercase tracking-wider">
-                              Click to view
-                            </span>
-                          </motion.div>
-                        )}
+                        {/* Click indicator for active card - only on hover */}
+                        <AnimatePresence>
+                          {isActive && hoveredCardIndex === index && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -5 }}
+                              transition={{ duration: 0.2 }}
+                              className="absolute top-3 right-3 px-2 py-1 rounded-md bg-white/10 backdrop-blur-sm border border-white/20"
+                            >
+                              <span className="text-[10px] font-mono text-white/80 uppercase tracking-wider">
+                                Click to view
+                              </span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
 
                         {/* Project title at bottom */}
                         <div className="absolute bottom-0 left-0 right-0 p-4">

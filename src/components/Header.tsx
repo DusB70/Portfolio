@@ -79,7 +79,47 @@ export default function Header() {
   const [activeSection, setActiveSection] = useState("hero");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isHiddenByModal, setIsHiddenByModal] = useState(false);
+  const [showNavOnHover, setShowNavOnHover] = useState(false);
   const { isMobile } = useDeviceOptimization();
+
+  // Listen for project modal state changes
+  useEffect(() => {
+    const handleModalStateChange = (e: CustomEvent<{ isOpen: boolean }>) => {
+      setIsHiddenByModal(e.detail.isOpen);
+      if (!e.detail.isOpen) {
+        setShowNavOnHover(false);
+      }
+    };
+
+    window.addEventListener(
+      "projectModalStateChange",
+      handleModalStateChange as EventListener,
+    );
+    return () => {
+      window.removeEventListener(
+        "projectModalStateChange",
+        handleModalStateChange as EventListener,
+      );
+    };
+  }, []);
+
+  // Track mouse position to show navbar when hovering at top
+  useEffect(() => {
+    if (!isHiddenByModal) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Show navbar when mouse is within top 60px of screen
+      if (e.clientY < 60) {
+        setShowNavOnHover(true);
+      } else if (e.clientY > 120) {
+        setShowNavOnHover(false);
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [isHiddenByModal]);
 
   useEffect(() => {
     const sectionIds = [
@@ -147,7 +187,18 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl">
+      <motion.header
+        className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl"
+        initial={{ y: 0 }}
+        animate={{
+          y: isHiddenByModal && !showNavOnHover ? -100 : 0,
+          opacity: isHiddenByModal && !showNavOnHover ? 0 : 1,
+        }}
+        transition={{
+          duration: 0.3,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+      >
         {/* White glow effect around navbar */}
         <div className="absolute inset-0 bg-white/10 blur-2xl rounded-full" />
 
@@ -259,7 +310,7 @@ export default function Header() {
             </div>
           </button>
         </nav>
-      </header>
+      </motion.header>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
