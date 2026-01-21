@@ -67,7 +67,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
     <AnimatePresence>
       {!isComplete && (
         <motion.div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black whitespace-nowrap"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black overflow-hidden"
           exit={{
             y: "-100vh",
             transition: {
@@ -90,11 +90,11 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           />
 
           {/* Main content */}
-          <div className="relative z-10 text-center">
+          <div className="relative z-10 text-center px-4 w-full max-w-[100vw]">
             {/* Name reveal */}
             <div className="overflow-hidden mb-8">
               <motion.div
-                className="flex items-center justify-center gap-4"
+                className="flex flex-col md:flex-row items-center justify-center md:gap-4"
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
                 transition={{
@@ -106,7 +106,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
                 {words.map((word, wordIndex) => (
                   <span
                     key={wordIndex}
-                    className="text-6xl md:text-8xl lg:text-9xl font-heading font-bold text-white tracking-tighter"
+                    className="text-[12vw] sm:text-[10vw] md:text-8xl lg:text-9xl font-heading font-bold text-white tracking-tighter leading-[1.1]"
                   >
                     {word.split("").map((char, charIndex) => (
                       <motion.span

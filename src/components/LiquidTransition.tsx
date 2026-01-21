@@ -16,10 +16,10 @@ import { useSafeScroll } from "@/hooks/useScrollUtils";
 // SVG Filter for the liquid/gooey effect - ONLY rendered on desktop
 export function LiquidFilter() {
   const { isMobile } = useDeviceOptimization();
-  
+
   // Skip heavy SVG filters on mobile
   if (isMobile) return null;
-  
+
   return (
     <svg className="absolute w-0 h-0" aria-hidden="true">
       <defs>
@@ -144,9 +144,13 @@ interface LiquidDividerProps {
 export function LiquidDivider({ className = "" }: LiquidDividerProps) {
   const { isMobile, animationLevel } = useDeviceOptimization();
   const ref = useRef<HTMLDivElement>(null);
-  
+
   // Completely disable scroll tracking on mobile
-  const { scrollYProgress } = useSafeScroll(ref, ["start end", "end start"], !isMobile);
+  const { scrollYProgress } = useSafeScroll(
+    ref,
+    ["start end", "end start"],
+    !isMobile,
+  );
 
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -265,7 +269,7 @@ export function LiquidSection({ children, id, index }: LiquidSectionProps) {
   const { scrollYProgress } = useSafeScroll(
     sectionRef,
     ["start end", "end start"],
-    !isMobile && animationLevel === "full"
+    !isMobile && animationLevel === "full",
   );
 
   // Use lighter spring on mobile (though scroll tracking is disabled)
@@ -278,17 +282,17 @@ export function LiquidSection({ children, id, index }: LiquidSectionProps) {
   const y = useTransform(
     smoothProgress,
     [0, 0.3, 0.7, 1],
-    isMobile ? [0, 0, 0, 0] : [100, 0, 0, -100]
+    isMobile ? [0, 0, 0, 0] : [100, 0, 0, -100],
   );
   const opacity = useTransform(
     smoothProgress,
     [0, 0.2, 0.8, 1],
-    isMobile ? [1, 1, 1, 1] : [0, 1, 1, 0]
+    isMobile ? [1, 1, 1, 1] : [0, 1, 1, 0],
   );
   const scale = useTransform(
     smoothProgress,
     [0, 0.3, 0.7, 1],
-    [1, 1, 1, 1] // No scale animation on any device for performance
+    [1, 1, 1, 1], // No scale animation on any device for performance
   );
 
   useEffect(() => {
@@ -335,7 +339,10 @@ export function LiquidSection({ children, id, index }: LiquidSectionProps) {
       )}
 
       {/* Main content with liquid animation */}
-      <motion.div className="w-full relative z-10 pt-16" style={{ y: isMobile ? 0 : y }}>
+      <motion.div
+        className="w-full relative z-10 pt-16"
+        style={{ y: isMobile ? 0 : y }}
+      >
         {children}
       </motion.div>
 

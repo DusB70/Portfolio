@@ -2,7 +2,7 @@
 
 /**
  * Device Optimization Hooks
- * 
+ *
  * Provides centralized detection for:
  * - Mobile/touch devices
  * - Low power mode (battery saver, reduced motion preference, slow CPU)
@@ -40,26 +40,40 @@ function detectOptimization(): DeviceOptimization {
   }
 
   // Mobile detection
-  const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  const isTouchDevice =
+    "ontouchstart" in window || navigator.maxTouchPoints > 0;
   const isSmallScreen = window.innerWidth < 768;
   const isMobile = isTouchDevice || isSmallScreen;
 
   // Reduced motion preference
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
 
   // Low power detection
-  const isLowEndDevice = navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4;
-  const isSlowConnection = (navigator as Navigator & { connection?: { effectiveType?: string; saveData?: boolean } })
-    .connection?.effectiveType === "2g" || 
-    (navigator as Navigator & { connection?: { effectiveType?: string; saveData?: boolean } }).connection?.saveData === true;
-  
+  const isLowEndDevice =
+    navigator.hardwareConcurrency !== undefined &&
+    navigator.hardwareConcurrency <= 4;
+  const isSlowConnection =
+    (
+      navigator as Navigator & {
+        connection?: { effectiveType?: string; saveData?: boolean };
+      }
+    ).connection?.effectiveType === "2g" ||
+    (
+      navigator as Navigator & {
+        connection?: { effectiveType?: string; saveData?: boolean };
+      }
+    ).connection?.saveData === true;
+
   // Battery API (where available)
   let isLowBattery = false;
   if ("getBattery" in navigator) {
     // Note: This is async, we'll update later if needed
   }
 
-  const isLowPower = prefersReducedMotion || isLowEndDevice || isSlowConnection || isLowBattery;
+  const isLowPower =
+    prefersReducedMotion || isLowEndDevice || isSlowConnection || isLowBattery;
 
   // Determine animation level
   let animationLevel: AnimationLevel = "full";
@@ -85,7 +99,8 @@ export function useIsMobile(): boolean {
 
   useEffect(() => {
     const update = () => {
-      const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+      const isTouchDevice =
+        "ontouchstart" in window || navigator.maxTouchPoints > 0;
       const isSmallScreen = window.innerWidth < 768;
       setIsMobile(isTouchDevice || isSmallScreen);
     };
@@ -128,12 +143,24 @@ export function useDeviceOptimization(): DeviceOptimization {
 
     // Battery API (async)
     if ("getBattery" in navigator) {
-      (navigator as Navigator & { getBattery: () => Promise<{ charging: boolean; level: number; addEventListener: (e: string, fn: () => void) => void }> })
+      (
+        navigator as Navigator & {
+          getBattery: () => Promise<{
+            charging: boolean;
+            level: number;
+            addEventListener: (e: string, fn: () => void) => void;
+          }>;
+        }
+      )
         .getBattery()
         .then((battery) => {
           const checkBattery = () => {
             if (battery.level < 0.2 && !battery.charging) {
-              cachedResult = { ...detectOptimization(), isLowPower: true, animationLevel: "reduced" };
+              cachedResult = {
+                ...detectOptimization(),
+                isLowPower: true,
+                animationLevel: "reduced",
+              };
               setOptimization(cachedResult);
             }
           };
@@ -173,7 +200,7 @@ export function getOptimizedVariants(
   fullVariants: Record<string, unknown>,
   reducedVariants: Record<string, unknown>,
   minimalVariants: Record<string, unknown>,
-  level: AnimationLevel
+  level: AnimationLevel,
 ): Record<string, unknown> {
   switch (level) {
     case "minimal":

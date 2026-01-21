@@ -34,9 +34,12 @@ const Skills = dynamic(() => import("@/components/sections/Skills"), {
 const Education = dynamic(() => import("@/components/sections/Education"), {
   loading: () => <SectionSkeleton />,
 });
-const ProjectsSimple = dynamic(() => import("@/components/sections/ProjectsSimple"), {
-  loading: () => <SectionSkeleton />,
-});
+const ProjectsSimple = dynamic(
+  () => import("@/components/sections/ProjectsSimple"),
+  {
+    loading: () => <SectionSkeleton />,
+  },
+);
 const Contact = dynamic(() => import("@/components/sections/Contact"), {
   loading: () => <SectionSkeleton />,
 });

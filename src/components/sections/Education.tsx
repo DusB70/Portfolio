@@ -81,11 +81,15 @@ export default function Education() {
   const { scrollYProgress } = useSafeScroll(
     sectionRef,
     ["start end", "end start"],
-    !isMobile
+    !isMobile,
   );
 
   // Parallax effects - disabled on mobile
-  const bgY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "0%"] : ["15%", "-15%"]);
+  const bgY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    isMobile ? ["0%", "0%"] : ["15%", "-15%"],
+  );
   const lineHeight = useTransform(scrollYProgress, [0, 0.5], ["0%", "100%"]);
 
   return (

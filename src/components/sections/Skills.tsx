@@ -278,11 +278,15 @@ export default function Skills() {
   const { scrollYProgress } = useSafeScroll(
     sectionRef,
     ["start end", "end start"],
-    !isMobile
+    !isMobile,
   );
 
   // Parallax effects - disabled on mobile
-  const bgY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "0%"] : ["-10%", "10%"]);
+  const bgY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    isMobile ? ["0%", "0%"] : ["-10%", "10%"],
+  );
 
   return (
     <div

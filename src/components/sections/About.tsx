@@ -117,16 +117,26 @@ export default function About() {
   const { scrollYProgress } = useSafeScroll(
     sectionRef,
     ["start end", "end start"],
-    !isMobile
+    !isMobile,
   );
 
   // Parallax effects - disabled on mobile
-  const bgY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "0%"] : ["5%", "-5%"]);
-  const imageY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "0%"] : ["10%", "-10%"]);
+  const bgY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    isMobile ? ["0%", "0%"] : ["5%", "-5%"],
+  );
+  const imageY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    isMobile ? ["0%", "0%"] : ["10%", "-10%"],
+  );
 
   // Select appropriate variants based on device
-  const activeContainerVariants = animationLevel === "full" ? containerVariants : mobileContainerVariants;
-  const activeTextVariants = animationLevel === "full" ? textVariants : mobileTextVariants;
+  const activeContainerVariants =
+    animationLevel === "full" ? containerVariants : mobileContainerVariants;
+  const activeTextVariants =
+    animationLevel === "full" ? textVariants : mobileTextVariants;
 
   return (
     <div
@@ -172,7 +182,9 @@ export default function About() {
           <div className="grid md:grid-cols-14 gap-8 md:gap-10 lg:gap-16 items-center">
             {/* Profile Image - Left Side */}
             <motion.div
-              variants={animationLevel === "full" ? imageVariants : mobileTextVariants}
+              variants={
+                animationLevel === "full" ? imageVariants : mobileTextVariants
+              }
               className="md:col-span-4 lg:col-span-5 order-1 md:order-1"
             >
               <motion.div
@@ -184,7 +196,9 @@ export default function About() {
                 <div className="absolute -inset-4 md:-inset-8 border border-white/5 rounded-3xl" />
 
                 {/* Image container with glassmorphism - reduced blur on mobile */}
-                <div className={`relative w-full h-full rounded-xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 border border-white/10 ${isMobile ? "" : "backdrop-blur-sm"}`}>
+                <div
+                  className={`relative w-full h-full rounded-xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 border border-white/10 ${isMobile ? "" : "backdrop-blur-sm"}`}
+                >
                   <Image
                     src="/Profile.jpg"
                     alt="Tharusha Pathirana"

@@ -58,8 +58,8 @@ const menuVariants = {
 };
 
 const menuItemVariants = {
-  closed: { 
-    opacity: 0, 
+  closed: {
+    opacity: 0,
     y: -10,
     x: -10,
   },
@@ -151,7 +151,9 @@ export default function Header() {
         {/* White glow effect around navbar */}
         <div className="absolute inset-0 bg-white/10 blur-2xl rounded-full" />
 
-        <nav className={`relative px-3 md:px-4 py-2.5 md:py-3 bg-black rounded-full border border-white/10 flex items-center justify-between ${isMobile ? "shadow-lg" : "backdrop-blur-xl shadow-[0_0_40px_rgba(255,255,255,0.15),0_0_80px_rgba(255,255,255,0.08)]"}`}>
+        <nav
+          className={`relative px-3 md:px-4 py-2.5 md:py-3 bg-black rounded-full border border-white/10 flex items-center justify-between ${isMobile ? "shadow-lg" : "backdrop-blur-xl shadow-[0_0_40px_rgba(255,255,255,0.15),0_0_80px_rgba(255,255,255,0.08)]"}`}
+        >
           {/* Logo Section */}
           <motion.div
             className="flex items-center gap-2 md:gap-3 pl-1 md:pl-2"
@@ -299,7 +301,7 @@ export default function Header() {
                       }`}
                     >
                       {/* Bullet point arrow indicator */}
-                      <svg 
+                      <svg
                         className={`w-3 h-3 transition-all duration-300 ${
                           activeSection === link.href.substring(1)
                             ? "text-white translate-x-1"
@@ -310,7 +312,11 @@ export default function Header() {
                         strokeWidth="2.5"
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                       {link.name}
                     </motion.button>

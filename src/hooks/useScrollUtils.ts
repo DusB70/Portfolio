@@ -2,7 +2,7 @@
 
 /**
  * Shared Scroll Utilities
- * 
+ *
  * Safe scroll hooks that prevent hydration mismatches
  * and can be completely disabled on mobile for performance
  */
@@ -22,7 +22,7 @@ type ScrollOffset = [ScrollOffsetPoint, ScrollOffsetPoint];
 export function useSafeScroll(
   ref: React.RefObject<HTMLDivElement | null>,
   offset: ScrollOffset = ["start end", "end start"],
-  enabled: boolean = true
+  enabled: boolean = true,
 ) {
   const [isMounted, setIsMounted] = useState(false);
 
